@@ -3,3 +3,4 @@ flask_restful
 sqlalchemy
 psycopg2-binary
 gunicorn
+pytest
