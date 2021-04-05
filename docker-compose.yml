@@ -27,6 +27,8 @@ services:
       - "5432"
     networks:
       - backend
+    volumes:
+      - ./migrate.sql:/tmp/migrate.sql
 
 networks:
   backend:

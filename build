@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+
+# Purge everything for testings sake
+docker rm -f $(docker ps -a -q)
+docker volume rm $(docker volume ls -q)
+
+# Build the containers and bring them online
+docker-compose build
+docker-compose up -d
+
+sleep 3
+# Create the database and tables
+docker exec PG psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'delivery'" | grep -q 1 | \
+  docker exec PG psql -U postgres -a -c "CREATE DATABASE delivery WITH ENCODING 'UTF8'"
+docker exec PG psql postgres -h 127.0.0.1 -d delivery -f /tmp/migrate.sql -a
+
+# Run down then up to bring container to forground once all commands are done running.
+docker-compose down
+docker-compose up
