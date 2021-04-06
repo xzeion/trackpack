@@ -22,7 +22,7 @@ class Database():
         self.conn = self.engine.connect()
 
 
-    def execute(self, data, table_name=None, schema=None):
+    def execute(self, query, table_name=None, schema=None):
         if table_name:
             table = sqlalchemy.Table(
                 table_name,
@@ -32,9 +32,9 @@ class Database():
                 ),
                 autoload=True
             ) 
-            self.conn.execute(table.insert(), data)
+            self.conn.execute(table.insert(), query)
         else:
-            self.conn.execute(data)
+            self.conn.execute(query)
 
 
     def commit(self):
