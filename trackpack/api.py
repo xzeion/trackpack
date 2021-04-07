@@ -12,6 +12,52 @@ app.config['BUNDLE_ERRORS'] = True
 api = Api(app)
 
 
+class Orm:
+
+    @classmethod
+    def location(self, name, type, loc):
+        lat, lon = [float(x) for x in loc.split(',')]
+        loc = Location(
+            name=name,
+            type=type,
+            latitude=lat,
+            longitude=lon)
+        try:
+            dbs.add(loc)
+            dbs.commit()
+        except Exception:
+            dbs.rollback()
+
+        # NOTE: Because sqlalchemy can not return the record uuid
+        # before creation, we commit and then query for the record.
+        return Location.query.filter(
+            Location.latitude == lat,
+            Location.longitude == lon
+        ).first().id
+
+    @classmethod
+    def package(self, sid, rid):
+        pac = Package(shipper=sid, reciever=rid)
+        dbs.add(pac)
+        dbs.commit()
+
+        return Package.query.filter(
+            Package.shipper == sid,
+            Package.reciever == rid
+        ).first().id
+
+    @classmethod
+    def history(self, pid, sid):
+        his = History(package=pid, location=sid)
+        dbs.add(his)
+        dbs.commit()
+
+        return History.query.filter(
+            History.package == pid
+            #History.location == sid
+        ).first().id
+
+
 class Create(Resource):
 
     def get(self):
@@ -28,27 +74,16 @@ class Create(Resource):
                             help='Five decimal place lat/long location as a comma seperated string "45.12345,45.54321"')
         args = parser.parse_args()
 
-        latitude, longitude = args.shipper_loc.split(',')
-        shipper_loc = Location.query.filter(
-            Location.latitude == latitude,
-            Location.longitude == longitude
-        )
-        dbs.add(Location(args.shipper_name, 'shipper', latitude, longitude))
-        dbs.commit()
+        shipper_id = Orm.location(args.shipper_name, 'ship', args.shipper_loc)
+        reciever_id = Orm.location(args.reciever_name, 'recieve', args.reciever_loc)
 
-        latitude, longitude = args.reciever_loc.split(',')
-        reciever_loc = Location.query.filter(
-            Location.latitude == latitude,
-            Location.longitude == longitude
-        )
-        if not reciever_loc:
-            dbs.add(Location(args.reciever_name, 'reciever', latitude, longitude))
-            dbs.commit()
-         
+        pid = Orm.package(shipper_id, reciever_id)
+        history = Orm.history(pid, reciever_id)
+
         # Create sender and reciever locations
         # Create package
         # Create Initial History entry.
-        return Location.query.all().first()
+        return {'Success': f'Created new package to database {history}'}
 
 
 class Progress(Resource):
@@ -75,6 +110,8 @@ class Progress(Resource):
         return parser.parse_args()
 
         Response()
+
+
 api.add_resource(Create, '/api/v1/create')
 api.add_resource(Progress, '/api/v1/progress')
 
