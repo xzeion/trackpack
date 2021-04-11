@@ -1,61 +1,53 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from flask_restful import Resource, reqparse, Api
-from flask import Flask, Response
+from flask import Flask, Response, jsonify
 from database import db_session as dbs
 from models import Package, History, Location
 from datetime import datetime
+import logging 
 
 app = Flask(__name__)
 app.config['BUNDLE_ERRORS'] = True
 api = Api(app)
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format = f'%(levelname)s: %(message)s')
+log = app.logger.debug
 
-class Orm:
-
-    @classmethod
-    def location(self, name, type, loc):
-        lat, lon = [float(x) for x in loc.split(',')]
-        loc = Location(
-            name=name,
-            type=type,
-            latitude=lat,
-            longitude=lon)
+def get_or_create(model, defaults=None, **k):
+    instance = dbs.query(model).filter_by(**k).one_or_none()
+    if instance:
+        return instance
+    else:
+        k |= defaults or {}
+        instance = model(**k)
         try:
-            dbs.add(loc)
+            dbs.add(instance)
             dbs.commit()
         except Exception:
             dbs.rollback()
+            instance = dbs.query(model).filter_by(**k).one()
+            return instance
+        else:
+            return instance
 
-        # NOTE: Because sqlalchemy can not return the record uuid
-        # before creation, we commit and then query for the record.
-        return Location.query.filter(
-            Location.latitude == lat,
-            Location.longitude == lon
-        ).first().id
 
-    @classmethod
-    def package(self, sid, rid):
-        pac = Package(shipper=sid, reciever=rid)
-        dbs.add(pac)
-        dbs.commit()
+def get_or_create_package(package_id=None, shipper=None, reciever=None):
+    if package_id:
+        return dbs.query(Package).filter(id == id).one_or_none()
+    package = Package(
+        shipper=[shipper],
+        reciever=[reciever])
+    dbs.add(package)
+    dbs.commit()
+    return package
 
-        return Package.query.filter(
-            Package.shipper == sid,
-            Package.reciever == rid
-        ).first().id
 
-    @classmethod
-    def history(self, pid, sid):
-        his = History(package=pid, location=sid)
-        dbs.add(his)
-        dbs.commit()
-
-        return History.query.filter(
-            History.package == pid
-            #History.location == sid
-        ).first().id
+def location(l):
+    # returns lat lon in a list as floats
+    return [float(x) for x in l.split(',')]
 
 
 class Create(Resource):
@@ -73,17 +65,39 @@ class Create(Resource):
         parser.add_argument('reciever_loc', type=str, required=True,
                             help='Five decimal place lat/long location as a comma seperated string "45.12345,45.54321"')
         args = parser.parse_args()
+        log('Args Parsed')
 
-        shipper_id = Orm.location(args.shipper_name, 'ship', args.shipper_loc)
-        reciever_id = Orm.location(args.reciever_name, 'recieve', args.reciever_loc)
+        lat, lon = location(args.shipper_loc)
+        shipper = get_or_create(
+            Location,
+            name=args.shipper_name,
+            type='ship',
+            latitude=lat,
+            longitude=lon )
+        log(f'Shipper Id: {shipper.id}')
 
-        pid = Orm.package(shipper_id, reciever_id)
-        history = Orm.history(pid, reciever_id)
+        lat, lon = location(args.reciever_loc)
+        reciever = get_or_create(
+            Location,
+            name = args.reciever_name,
+            type='recieve',
+            latitude=lat,
+            longitude=lon )
+        log(f'Reciever Id: {reciever.id}')
 
-        # Create sender and reciever locations
-        # Create package
-        # Create Initial History entry.
-        return {'Success': f'Created new package to database {history}'}
+        package = get_or_create_package(
+            shipper=shipper,
+            reciever=reciever
+        )
+        log(f'Package Id: {package.id}')
+
+        history = get_or_create(
+            History,
+            package=package.id,
+            location=shipper.id )
+        log(f'History Id: {history.id}')
+
+        return {'Success': f'New Package Added, PID: {package.id}'}
 
 
 class Progress(Resource):
@@ -92,8 +106,9 @@ class Progress(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=str, required=True,
                             help='To check the progress of your package, please append the package id as an argument to the url.')
-        # Return all history elements related to package and delivery bool
-        return parser.parse_args()
+        args = parser.parse_args()
+        history = History.query.filter(History.package == args.id)
+        return jsonify(history)
 
     def post(self):
         parser = reqparse.RequestParser()

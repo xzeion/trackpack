@@ -5,6 +5,7 @@ from os import environ as env
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+#from flask.ext.jsontools import JsonSerializableBase
 
 engine = create_engine(
     f'postgresql://{env.get("DBUSER")}:{env.get("POSTGRES_PASSWORD")}@{env.get("HOST")}/{env.get("DBNAME")}',
@@ -20,7 +21,9 @@ db_session = scoped_session(
     )
 )
 
+#Base = declarative_base(cls=(JsonSerializableBase,))
 Base = declarative_base()
+
 Base.query = db_session.query_property()
 
 def init_db():
@@ -29,4 +32,3 @@ def init_db():
     # you will have to import them first before calling init_db()
     import models
     Base.metadata.create_all(bind=engine)
-    
