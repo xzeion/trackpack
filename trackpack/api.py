@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from flask_restful import Resource, reqparse, Api
 from flask import Flask, Response, jsonify
+from flask_restful import Resource, reqparse, Api
 from database import db_session as dbs
-from models import Package, History, Location
+from models import Package, History, Location, PackageSchema, HistorySchema, LocationSchema
 from datetime import datetime
+from decimal import Decimal
+from sqlalchemy.exc import DataError
 import logging 
+import json
+import uuid
 
 app = Flask(__name__)
 app.config['BUNDLE_ERRORS'] = True
@@ -15,6 +19,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format = f'%(levelname)s: %(message)s')
 log = app.logger.debug
+
 
 def get_or_create(model, defaults=None, **k):
     instance = dbs.query(model).filter_by(**k).one_or_none()
@@ -49,12 +54,14 @@ def location(l):
     # returns lat lon in a list as floats
     return [float(x) for x in l.split(',')]
 
+def valid_uuid(id):
+    try: 
+        uuid.UUID(id)
+        return True
+    except ValueError:
+        return False
 
 class Create(Resource):
-
-    def get(self):
-        raise Exception
-        return "put endpoint instructions here"
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -64,6 +71,8 @@ class Create(Resource):
                             help='Five decimal place lat/long location as a comma seperated string "45.12345,45.54321"')
         parser.add_argument('reciever_loc', type=str, required=True,
                             help='Five decimal place lat/long location as a comma seperated string "45.12345,45.54321"')
+        parser.add_argument('eta', type=str, required=False,
+                            help='A datetime representing the estimated time of arrival formatted as "YYYY-MM-DDTHH:MM:SS.00000"')
         args = parser.parse_args()
         log('Args Parsed')
 
@@ -71,7 +80,6 @@ class Create(Resource):
         shipper = get_or_create(
             Location,
             name=args.shipper_name,
-            type='ship',
             latitude=lat,
             longitude=lon )
         log(f'Shipper Id: {shipper.id}')
@@ -80,7 +88,6 @@ class Create(Resource):
         reciever = get_or_create(
             Location,
             name = args.reciever_name,
-            type='recieve',
             latitude=lat,
             longitude=lon )
         log(f'Reciever Id: {reciever.id}')
@@ -105,27 +112,76 @@ class Progress(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=str, required=True,
-                            help='To check the progress of your package, please append the package id as an argument to the url.')
+            help='To check the progress of your package, please append the package id as an argument to the url.')
         args = parser.parse_args()
+
+        if not valid_uuid(args.id):
+            return Response(json.dumps({'ERROR': 'Invalid UUID'}),
+                status=400, mimetype='application/json')
+
+        pack = Package.query.get(args.id)
+        if not pack:
+            return Response(json.dumps({'ERROR': 'There is no package with that id'}),
+                status=400, mimetype='application/json')
+
         history = History.query.filter(History.package == args.id)
-        return jsonify(history)
+        return Response(json.dumps({
+            'package_id': args.id,
+            'package': PackageSchema().dump(pack),
+            'shipper': LocationSchema().dump(pack.shipper.one()),
+            'reciever': LocationSchema().dump(pack.reciever.one()),
+            'history': HistorySchema(many=True).dump(history)
+        }), status=200)
 
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=str, required=True,
-                            help='To check the progress of your package, please append the package id as an argument to the url.')
-        parser.add_argument('lat', type=int, required=True, help='Latitude of location recieving the package')
-        parser.add_argument('long', type=int, required=True, help='Longitude of location recieving the package')
+                            help='Id of package you are checking in.')
+        parser.add_argument('name', type=str, required=True, help='Name of the facility recieving the package')
+        parser.add_argument('location', type=str, required=True,
+                            help='Five decimal place lat/long location as a comma seperated string "45.12345,45.54321"')
         parser.add_argument('arrival', type=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
-                            help='When the package arrived if its not when the record is created. (0001-01-01T01:01:01.0)')
+                            help='When the package arrived if different than current time. "YYYY-MM-DDTHH:MM:SS.00000"')
+        args = parser.parse_args()
 
-        # Get or create sender/reciver location
-        # Create new history element for package
-        # if package current location matches reciever mark package as delivered.
-        return parser.parse_args()
+        if not valid_uuid(args.id):
+            return Response(json.dumps({'ERROR': 'Invalid UUID'}),
+                status=400, mimetype='application/json')
 
-        Response()
+        pack =  Package.query.get(args.id)
+        if not pack:
+            return jsonify({'ERROR': 'There is no package with that id'})
+        if pack.delivered:
+            return jsonify({'ERROR': 'You can\'t add a stop to a package that has been delivered'})
 
+        lat, lon = location(args.location)
+        loc = get_or_create(
+            Location,
+            name=args.name,
+            latitude=lat,
+            longitude=lon )
+
+        history = get_or_create(
+            History,
+            package=args.id,
+            location=loc.id )
+
+        if pack.reciever.one().id == loc.id:
+            pack.delivered = True
+            pack.eta = history.arrival
+            dbs.add(pack)
+            dbs.commit()
+
+        return jsonify({
+            'check_in': 'successful',
+            'package_id': args.id,
+            'delivered': pack.delivered,
+            **HistorySchema().dump(history)
+        })
+
+
+def test():
+    import pdb;pdb.set_trace()
 
 api.add_resource(Create, '/api/v1/create')
 api.add_resource(Progress, '/api/v1/progress')

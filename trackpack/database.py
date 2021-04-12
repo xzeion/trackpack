@@ -5,7 +5,6 @@ from os import environ as env
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-#from flask.ext.jsontools import JsonSerializableBase
 
 engine = create_engine(
     f'postgresql://{env.get("DBUSER")}:{env.get("POSTGRES_PASSWORD")}@{env.get("HOST")}/{env.get("DBNAME")}',
