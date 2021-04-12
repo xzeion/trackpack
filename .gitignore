@@ -1,0 +1,4 @@
+__test__
+migrate.sql
+__pycache__
+*.pyc
