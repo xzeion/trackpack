@@ -133,7 +133,7 @@ As you can see from the resulting json the packages `delivered` status is now se
 }
 ```
 NOTE: 
-* *you can not add any more stops to a package once its delivery status is set to true.
+* you can not add any more stops to a package once its delivery status is set to true.
 * the finall arrival time from the history suffices as the time of delivery. no need to duplicate the data.
 
 <!-- ROADMAP -->
