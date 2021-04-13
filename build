@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Purge everything for testings sake
-docker rm -f $(docker ps -a -q)
-docker volume rm $(docker volume ls -q)
+# Purge everything for local testings sake
+# docker rm -f $(docker ps -a -q)
+# docker volume rm $(docker volume ls -q)
 
 # Build the containers and bring them online
 docker-compose build
