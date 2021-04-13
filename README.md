@@ -11,7 +11,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 * If on windows install git for windows and use the git terminal to run the build script
-* Regardless of system make sure you have docker and docker-compose installed
+* Regardless of your OS, make sure you have docker and docker-compose installed
 * Make sure your user is part of the docker group if you are running linux
 
 ### Installation
@@ -143,3 +143,4 @@ NOTE:
 * there is no attention given to preventing the duplication of packages.
 * no authorizaion of any kind.
 * Class based views are a bit of a mess and could use cleanup.
+* add a data generator to create a few dummy packages.
