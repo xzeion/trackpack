@@ -19,3 +19,6 @@ docker exec TP python -c 'from trackpack.database import init_db; init_db()'
 # Run down then up to bring container to forground once all commands are done running.
 docker-compose stop
 docker-compose up
+
+# Execute testing suite
+docker exec -t TP pytest
