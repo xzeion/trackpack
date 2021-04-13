@@ -33,8 +33,8 @@ To get a local copy up and running follow these simple steps.
 
 This project allows for a few simple api calls that are documented below.
 
-Loacations are stored as 5 decimal place lat and long coordinates
-with the intent being to integrate google maps to aquire the actual addresses
+Locations are stored as 5 decimal place lat and long coordinates
+with the intent being to integrate google maps to acquire the actual addresses
 ```sh
 # Create a new package in the system
 curl -X POST \
@@ -47,10 +47,10 @@ curl -X POST \
 This should return a json object letting you know a new package was added
 and the package id.
 ```json
-{"Success": "New Package Added, PID: {PACKAGE_ID}"}
+{"Success": "New Package Added", "PID": "{PACKAGE_ID}"}
 ```
 
-Next lets go ahead and add a checkpoint to the package
+Next, let's go ahead and add a checkpoint to the package
 ```sh
 # Add a stop to an existing package
 curl -X POST \
@@ -71,7 +71,7 @@ This should return a json object with the details of the checkin
 }
 ```
 
-Great! Lets check our packages progress by pulling up its history
+Great! Let's check our packages progress by pulling up its history
 ```sh
 curl -X GET localhost:5000/api/v1/progress?id={PACKAGE_ID}
 ```
@@ -112,7 +112,7 @@ curl -X GET localhost:5000/api/v1/progress?id={PACKAGE_ID}
 As you can see above we have our two points, the initial element that was created when the package was,
 and the second we just created with the `/progress` endpoint.
 
-We are going to add one more stop to our package so that the location matches the recievers location.
+We are going to add one more stop to our package so that the location matches the reciever's location.
 ```sh
 # Add a stop to an existing package
 curl -X POST \
@@ -134,14 +134,14 @@ As you can see from the resulting json the packages `delivered` status is now se
 ```
 NOTE: 
 * you can not add any more stops to a package once its delivery status is set to true.
-* the finall arrival time from the history suffices as the time of delivery. no need to duplicate the data.
+* the final arrival time from the history suffices as the time of delivery. no need to duplicate the data.
 
 <!-- ROADMAP -->
 ## Future Improvements
 * If lat lon is off by even a single decimal point the locations could be duplicated.
-* if lat lon is off by even a single decimal point the package wont be marked as delivered.
+* if lat lon is off by even a single decimal point the package won't be marked as delivered.
 * there is no attention given to preventing the duplication of packages.
-* no authorizaion of any kind.
+* no authorization of any kind.
 * Class based views are a bit of a mess and could use cleanup.
 * add a data generator to create a few dummy packages.
 * pull database credentials from a credential store.
