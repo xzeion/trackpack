@@ -144,3 +144,4 @@ NOTE:
 * no authorizaion of any kind.
 * Class based views are a bit of a mess and could use cleanup.
 * add a data generator to create a few dummy packages.
+* pull database credentials from a credential store.
