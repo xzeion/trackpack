@@ -97,8 +97,14 @@ curl -X GET localhost:5000/api/v1/progress?id={PACKAGE_ID}
     "longitude": -83.88431
   },
   "history": [
-    {"arrival": "2021-04-13T04:20:43.727826", "location": "e1e1c166-5338-43a1-8a54-b7b67ce12857"},
-    {"arrival": "2021-04-13T04:35:05.333801", "location": "c51f0c97-56bc-4807-975d-fd5ae3492594"}
+    {
+      "arrival": "2021-04-13T04:20:43.727826",
+      "location": "{LOCATION_ID}"
+    },
+    {
+      "arrival": "2021-04-13T04:35:05.333801",
+      "location": "{LOCATION_ID}"
+    }
   ]
 }
 ```
@@ -127,11 +133,11 @@ As you can see from the resulting json the packages `delivered` status is now se
 }
 ```
 NOTE: 
-  *you can not add any more stops to a package once its delivery status is set to true.
-  the finall arrival time from the history suffices as the time of delivery. no need to duplicate the data.
+* *you can not add any more stops to a package once its delivery status is set to true.
+* the finall arrival time from the history suffices as the time of delivery. no need to duplicate the data.
 
 <!-- ROADMAP -->
-## Roadmap
+## Future Improvements
 * If lat lon is off by even a single decimal point the locations could be duplicated.
 * if lat lon is off by even a single decimal point the package wont be marked as delivered.
 * there is no attention given to preventing the duplication of packages.
