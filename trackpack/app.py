@@ -60,6 +60,10 @@ def valid_uuid(id):
     except ValueError:
         return False
 
+def error_resp(message):
+    return Response(json.dumps({'ERROR': message}),
+        status=400, mimetype='application/json')
+
 class Create(Resource):
 
     def post(self):
@@ -103,7 +107,10 @@ class Create(Resource):
             location=shipper.id )
         log(f'History Id: {history.id}')
 
-        return {'Success': 'New Package Added', 'PID': str(package.id)}
+        return Response(json.dumps({
+            'Success': 'New Package Added',
+            'PID': str(package.id)
+        }), status=200)
 
 
 class Progress(Resource):
@@ -115,13 +122,10 @@ class Progress(Resource):
         args = parser.parse_args()
 
         if not valid_uuid(args.id):
-            return Response(json.dumps({'ERROR': 'Invalid UUID'}),
-                status=400, mimetype='application/json')
-
+            return error_resp('Invalid UUID')
         pack = Package.query.get(args.id)
         if not pack:
-            return Response(json.dumps({'ERROR': 'There is no package with that id'}),
-                status=400, mimetype='application/json')
+            return error_resp('There is no package with that id')
 
         history = History.query.filter(History.package == args.id)
         return Response(json.dumps({
@@ -144,14 +148,12 @@ class Progress(Resource):
         args = parser.parse_args()
 
         if not valid_uuid(args.id):
-            return Response(json.dumps({'ERROR': 'Invalid UUID'}),
-                status=400, mimetype='application/json')
-
+            return error_resp('Invalid UUID')
         pack =  Package.query.get(args.id)
         if not pack:
-            return jsonify({'ERROR': 'There is no package with that id'})
+            return error_resp('There is no package with that id')
         if pack.delivered:
-            return jsonify({'ERROR': 'You can\'t add a stop to a package that has been delivered'})
+            return error_resp('You can\'t add a stop to a package that has been delivered')
 
         lat, lon = location(args.location)
         loc = get_or_create(
@@ -171,12 +173,12 @@ class Progress(Resource):
             dbs.add(pack)
             dbs.commit()
 
-        return jsonify({
+        return Response(json.dumps({
             'check_in': 'successful',
             'package_id': args.id,
             'delivered': pack.delivered,
             **HistorySchema().dump(history)
-        })
+        }), status=200)
 
 
 api.add_resource(Create, '/api/v1/create')

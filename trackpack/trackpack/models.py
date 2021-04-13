@@ -14,14 +14,11 @@ dt_format='%Y-%m-%dT%H:%M:%S.%f'
 
 shipper_association = Table( 'shipper_association', Base.metadata,
     Column('location', UUID(as_uuid=True), ForeignKey('location.id')),
-    Column('package', UUID(as_uuid=True), ForeignKey('package.id'))
-                    
-)
+    Column('package', UUID(as_uuid=True), ForeignKey('package.id')))
+
 reciever_association = Table( 'reciever_association', Base.metadata,
     Column('location', UUID(as_uuid=True), ForeignKey('location.id')),
-    Column('package', UUID(as_uuid=True), ForeignKey('package.id'))
-                    
-)
+    Column('package', UUID(as_uuid=True), ForeignKey('package.id')))
 
 class Location(Base):
     __tablename__ = 'location'

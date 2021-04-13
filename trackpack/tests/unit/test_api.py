@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-#from pytest import set_trace as st
+# from pytest import set_trace as st
 
 import requests
 import json
@@ -38,6 +38,32 @@ def test_adding_stop_to_package():
     assert resp.status_code == 200
 
 
+def test_adding_stop_to_package_invalid_uuid():
+    resp = requests.post(
+        f'{pytest.BASE_URL}/api/v1/progress',
+        data={
+            "name": "Delivery Daves",
+            "location": "45.12345,54.54321",
+            "id": "12315"
+        }
+    )
+    assert resp.status_code == 400
+    assert resp.json()['ERROR'] == 'Invalid UUID'
+
+
+def test_adding_stop_to_package_does_not_exist():
+    resp = requests.post(
+        f'{pytest.BASE_URL}/api/v1/progress',
+        data={
+            "name": "Delivery Daves",
+            "location": "45.12345,54.54321",
+            "id": "e1fd8a39-dc03-432e-b28f-9d5f155ca386"
+        }
+    )
+    assert resp.status_code == 400
+    assert resp.json()['ERROR'] == 'There is no package with that id'
+
+
 def test_delivering_package_to_destination():
     resp = requests.post(
         f'{pytest.BASE_URL}/api/v1/progress',
@@ -60,6 +86,19 @@ def test_get_package_history():
     assert data['package_id'] == pytest.pid
     # Check that the final location in the history is the recievers location
     assert data['history'][-1]['location'] == data['reciever']['id']
+
+
+def test_get_package_history_invalid_uuid():
+    resp = requests.get(f'{pytest.BASE_URL}/api/v1/progress?id=12345')
+    assert resp.status_code == 400
+    assert resp.json()['ERROR'] == 'Invalid UUID'
+
+
+def test_get_package_history_package_does_not_exist():
+    resp = requests.get(
+        f'{pytest.BASE_URL}/api/v1/progress?id=e1fd8a39-dc03-432e-b28f-9d5f155ca383')
+    assert resp.status_code == 400
+    assert resp.json()['ERROR'] == 'There is no package with that id'
 
 
 def test_cant_add_stop_after_delivery():
