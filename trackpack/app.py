@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, Response, jsonify
 from flask_restful import Resource, reqparse, Api
-from database import db_session as dbs
-from models import Package, History, Location, PackageSchema, HistorySchema, LocationSchema
+from trackpack.database import db_session as dbs
+from trackpack.models import Package, History, Location, PackageSchema, HistorySchema, LocationSchema
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.exc import DataError
@@ -180,11 +180,9 @@ class Progress(Resource):
         })
 
 
-def test():
-    import pdb;pdb.set_trace()
-
 api.add_resource(Create, '/api/v1/create')
 api.add_resource(Progress, '/api/v1/progress')
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', threaded=True, debug=True)

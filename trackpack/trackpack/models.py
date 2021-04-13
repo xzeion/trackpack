@@ -7,7 +7,7 @@ from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 from dataclasses import dataclass
-from database import Base
+from trackpack.database import Base
 import uuid
 
 dt_format='%Y-%m-%dT%H:%M:%S.%f'
@@ -51,13 +51,11 @@ class Package (Base):
     shipper = relationship(
         'Location',
         backref='shipper',
-        #overlaps='reciever, package',
         secondary=shipper_association,
         lazy='dynamic')
     reciever = relationship(
         'Location',
         backref='reciever',
-        #overlaps='shipper, package',
         secondary=reciever_association,
         lazy='dynamic')
     history = relationship('History', backref='package_history', uselist=False)

@@ -4,8 +4,7 @@ services:
   web:
     container_name: TP
     build: .
-    command: python api.py
-    #restart: always
+    command: gunicorn -b 0.0.0.0:5000 wsgi:app --worker-class=eventlet --workers=5 --threads=4 --timeout 120 --log-level=debug --log-file - --max-requests=5120 --max-requests-jitter=1000 --worker-tmp-dir=/dev/shm
     depends_on:
       - db
     networks:
@@ -20,7 +19,7 @@ services:
   db:
     container_name: PG
     image: postgres
-    #restart: always
+    restart: always
     environment:
       - POSTGRES_PASSWORD
     expose:
