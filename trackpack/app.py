@@ -6,7 +6,6 @@ from trackpack.database import db_session as dbs
 from trackpack.models import Package, History, Location, PackageSchema, HistorySchema, LocationSchema
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy.exc import DataError
 import logging 
 import json
 import uuid
@@ -104,7 +103,7 @@ class Create(Resource):
             location=shipper.id )
         log(f'History Id: {history.id}')
 
-        return {'Success': f'New Package Added, PID: {package.id}'}
+        return {'Success': 'New Package Added', 'PID': str(package.id)}
 
 
 class Progress(Resource):
