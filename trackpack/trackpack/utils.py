@@ -1,6 +1,6 @@
 from flask import Response
 from trackpack.database import db_session as dbs
-from models import Package
+from trackpack.models import Package
 import uuid
 import json
 
