@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from flask import Flask, Response, jsonify
+from flask import Flask, Response
 from flask_restful import Resource, reqparse, Api
 from trackpack.database import db_session as dbs
 from trackpack.models import Package, History, Location, PackageSchema, HistorySchema, LocationSchema
 from trackpack.utils import get_or_create, get_or_create_package, location, valid_uuid, error_resp
 from datetime import datetime
-from decimal import Decimal
 import logging 
 import json
-import uuid
 
 app = Flask(__name__)
 app.config['BUNDLE_ERRORS'] = True
