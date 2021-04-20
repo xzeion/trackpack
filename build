@@ -8,10 +8,8 @@
 docker-compose build
 docker-compose up -d
 
-# Wait for the container to come online before attempting to run psql commands
-until [ "`docker inspect -f {{.State.Running}} PG`"=="true" ]; do
-  sleep 0.1;
-done;
+# Wait for the database to come online before attempting to run psql commands
+timeout 90s bash -c 'until docker exec PG pg_isready ; do sleep 0.5 ; done'
 
 # Create the database
 docker exec PG psql postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'delivery';" \
