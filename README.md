@@ -1,11 +1,11 @@
-#TrackPack
+## TrackPack
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+### About The Project
 A simple flask based application for shipping and tracking packages.
 
 <!-- GETTING STARTED -->
-## Getting Started
+### Getting Started
 
 To get a local copy up and running follow these simple steps.
 
@@ -29,7 +29,7 @@ To get a local copy up and running follow these simple steps.
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
+### Usage
 
 This project allows for a few simple api calls that are documented below.
 
@@ -137,7 +137,7 @@ NOTE:
 * the final arrival time from the history suffices as the time of delivery. no need to duplicate the data.
 
 <!-- ROADMAP -->
-## Future Improvements
+### Future Improvements
 * If lat lon is off by even a single decimal point the locations could be duplicated.
 * if lat lon is off by even a single decimal point the package won't be marked as delivered.
 * there is no attention given to preventing the duplication of packages.
