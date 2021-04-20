@@ -141,4 +141,4 @@ api.add_resource(Progress, '/api/v1/progress')
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', threaded=True, debug=True)
+    app.run(host='0.0.0.0', threaded=True, debug=os.environ.get('DEBUG', False))
